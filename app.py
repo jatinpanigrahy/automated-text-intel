@@ -13,7 +13,7 @@ with st.sidebar:
         "Operation Mode", ["Summarize Text", "Extract Action Items", "Analyze Tone"]
     )
     st.divider()
-    st.markdown("Model: `gemini-2.5-flash`")
+    st.markdown("Model: `gemini-3.7-flash`")
 
 user_text = st.text_area(
     "Input Text Source:",
@@ -27,9 +27,7 @@ if st.button("Execute Processing", type="primary"):
     else:
         with st.spinner("Processing request..."):
             try:
-                # Automatically fetch the API key from Streamlit Cloud secrets
                 api_key = st.secrets["GEMINI_API_KEY"]
-
                 client = genai.Client(api_key=api_key)
 
                 if utility_mode == "Summarize Text":
@@ -40,7 +38,7 @@ if st.button("Execute Processing", type="primary"):
                     prompt = f"Perform a clinical tone and sentiment analysis on the following text:\n\n{user_text}"
 
                 response = client.models.generate_content(
-                    model="gemini-2.5-flash",
+                    model="gemini-3.7-flash",
                     contents=prompt,
                 )
 
