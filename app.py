@@ -6,18 +6,19 @@ from google.genai import errors
 
 st.set_page_config(page_title="TextSift", layout="wide")
 
+st.markdown(
+    """
+    <style>
+    .block-container { padding-top: 2rem; }
+    </style>
+""",
+    unsafe_allow_html=True,
+)
+
 st.title("TextSift")
-st.markdown("Professional text processing and extraction utility.")
-st.divider()
-
-col_meta1, col_meta2, col_meta3 = st.columns(3)
-with col_meta1:
-    st.metric(label="Engine", value="Gemini 3.6-flash")
-with col_meta2:
-    st.metric(label="Status", value="Operational")
-with col_meta3:
-    st.metric(label="Interface", value="Dual-Pane Workspace")
-
+st.markdown(
+    "Transform articles, notes, or web pages into structured intelligence instantly."
+)
 st.divider()
 
 col_input, col_output = st.columns(2, gap="large")
@@ -36,19 +37,27 @@ with col_input:
         ],
     )
 
-    input_type = st.radio("Input Source Type", ["Raw Text", "Web URL"], horizontal=True)
+    input_type = st.radio(
+        "Input Type",
+        ["Raw Text", "Web URL"],
+        horizontal=True,
+        label_visibility="collapsed",
+    )
 
     if input_type == "Raw Text":
         raw_input = st.text_area(
-            "Paste content:",
-            placeholder="Enter articles, notes, or documentation here...",
-            height=280,
+            "Content:",
+            placeholder="Paste articles, meeting notes, or documentation...",
+            height=300,
+            label_visibility="collapsed",
         )
         if raw_input:
             source_text = raw_input
     else:
         url_input = st.text_input(
-            "Target URL:", placeholder="https://example.com/article"
+            "URL:",
+            placeholder="https://example.com/article",
+            label_visibility="collapsed",
         )
         if url_input:
             try:
@@ -78,9 +87,23 @@ with col_output:
 
     with output_container:
         if not execute_btn:
-            st.info(
-                "Configure settings on the left, provide content, and click execute to generate output."
+            st.markdown("### System Overview")
+            st.markdown(
+                "TextSift processes unstructured content into structured, high-value outputs."
             )
+            st.markdown("---")
+            st.markdown("**Capabilities:**")
+            st.markdown(
+                "- **Summarize Text:** Condenses long texts into concise executive summaries and core takeaways."
+            )
+            st.markdown(
+                "- **List Actionable Steps:** Extracts clear, prioritized deliverables from documentation or notes."
+            )
+            st.markdown(
+                "- **Social Media Format:** Converts technical or long-form content into professional posts for platforms like LinkedIn or X."
+            )
+            st.markdown("---")
+            st.caption("Provide an input on the left and click execute to begin.")
         else:
             if not source_text.strip():
                 st.warning("Input content is empty. Provide text or a valid URL.")
@@ -112,3 +135,8 @@ with col_output:
                         st.error(f"API communication error: {e}")
                     except Exception as e:
                         st.error(f"System exception: {e}")
+
+with st.sidebar:
+    st.header("System Specs")
+    st.markdown("Powered by Google Gemini (`gemini-3.6-flash`)")
+    st.markdown("Environment: Secure Cloud")
