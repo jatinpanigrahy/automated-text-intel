@@ -5,32 +5,94 @@ from google import genai
 from google.genai import errors
 
 st.set_page_config(
-    page_title="TextSift", layout="wide", initial_sidebar_state="collapsed"
+    page_title="Text Intelligence",
+    layout="wide",
+    initial_sidebar_state="collapsed",
 )
 
 st.markdown(
     """
     <style>
-    .main {
-        padding: 2rem;
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+    
+    html, body, [class*="css"] {
+        font-family: 'Inter', sans-serif;
     }
+    
+    .stApp {
+        background-color: #0a0a0c;
+    }
+    
+    .stTextArea textarea {
+        background-color: #121214 !important;
+        border: 1px solid #27272a !important;
+        color: #ededed !important;
+        border-radius: 8px;
+        padding: 12px;
+    }
+    
+    .stSelectbox div[data-baseweb="select"] {
+        background-color: #121214 !important;
+        border: 1px solid #27272a !important;
+        border-radius: 8px;
+    }
+    
+    div[data-baseweb="select"] input {
+        caret-color: transparent !important;
+        cursor: pointer !important;
+    }
+    
     .stButton button {
-        border-radius: 6px;
+        background-color: #ededed !important;
+        border: none !important;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        width: 100%;
+        padding: 0.5rem 1rem;
     }
+    
+    .stButton button p, .stButton button div, .stButton button span {
+        color: #0a0a0c !important;
+        font-weight: 600 !important;
+    }
+    
+    .stButton button:hover {
+        background-color: #ffffff !important;
+        transform: translateY(-1px);
+    }
+    
+    div[data-testid="stContainer"] {
+        background-color: #121214;
+        border: 1px solid #27272a;
+        border-radius: 12px;
+        padding: 1.5rem;
+    }
+    
+    h1, h2, h3, p, span, div {
+        color: #ededed;
+    }
+    
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
     </style>
-""",
+    """,
     unsafe_allow_html=True,
 )
 
-st.title("TextSift")
+if "output_data" not in st.session_state:
+    st.session_state.output_data = None
+
+st.title("Automated Text Intelligence")
 st.markdown(
-    "Transform articles, notes, or web pages into structured intelligence instantly."
+    "Transform articles, notes, or web pages into structured insights, summaries, or social content instantly."
 )
 
 col_mode, col_input = st.columns([1, 3])
+
 with col_mode:
     utility_mode = st.selectbox(
-        "Operation Mode",
+        "Select Mode",
         [
             "Summarize Text",
             "List The Actionable Steps",
@@ -40,87 +102,88 @@ with col_mode:
     )
 
 with col_input:
-    user_input = st.text_input(
+    user_input = st.text_area(
         "Input",
         placeholder="Enter raw text or a target URL (https://...)",
+        height=200,
         label_visibility="collapsed",
     )
 
-sample_col1, sample_col2, sample_col3, sample_col4 = st.columns([1, 1, 1, 6])
-with sample_col1:
-    sample_1 = st.button("Sample Article", use_container_width=True)
-with sample_col2:
-    sample_2 = st.button("Sample Notes", use_container_width=True)
+execute_btn = st.button("Generate", type="primary")
 
-target_content = ""
+if execute_btn:
+    target_content = ""
 
-if sample_1:
-    target_content = "Artificial intelligence is rapidly transforming software development by automating boilerplate code, assisting in debugging, and optimizing system architectures. Developers who leverage these tools effectively can significantly increase their output and focus on higher-order system design."
-elif sample_2:
-    target_content = "1. Review Q3 financial reports by Tuesday. 2. Schedule alignment meeting with engineering leads. 3. Update repository documentation before deployment."
-elif user_input:
-    if user_input.startswith("http://") or user_input.startswith("https://"):
-        try:
-            headers = {"User-Agent": "Mozilla/5.0"}
-            resp = requests.get(user_input, headers=headers, timeout=10)
-            if resp.status_code == 200:
-                soup = BeautifulSoup(resp.text, "html.parser")
-                for script in soup(["script", "style"]):
-                    script.decompose()
-                target_content = soup.get_text(separator=" ", strip=True)
-            else:
-                st.error("Failed to fetch URL.")
-        except Exception as e:
-            st.error(f"Error: {e}")
+    if user_input:
+        if user_input.startswith("http://") or user_input.startswith("https://"):
+            try:
+                headers = {"User-Agent": "Mozilla/5.0"}
+                resp = requests.get(user_input, headers=headers, timeout=10)
+                if resp.status_code == 200:
+                    soup = BeautifulSoup(resp.text, "html.parser")
+                    for script in soup(["script", "style", "nav", "footer"]):
+                        script.decompose()
+                    target_content = soup.get_text(separator=" ", strip=True)
+                else:
+                    st.error("Failed to fetch URL.")
+            except Exception as e:
+                st.error(f"Error: {e}")
+        else:
+            target_content = user_input
+
+        if target_content:
+            with st.spinner("Processing content..."):
+                try:
+                    api_key = st.secrets["GEMINI_API_KEY"]
+                    client = genai.Client(api_key=api_key)
+
+                    if utility_mode == "Summarize Text":
+                        prompt = f"Provide a clean summary and 3 key points for the following content:\n\n{target_content}"
+                    elif utility_mode == "List The Actionable Steps":
+                        prompt = f"Create a clear, prioritized list of actionable steps or deliverables from the following content:\n\n{target_content}"
+                    else:
+                        prompt = f"Convert the following content into an engaging social media message. Keep the tone and language simple, minimal and mature. Don't make it either overly rigid, or too pretentious, showy, or overly excited. Keep the use of emojis - minimal and what's actually important:\n\n{target_content}"
+
+                    response = client.models.generate_content(
+                        model="gemini-3.6-flash",
+                        contents=prompt,
+                    )
+
+                    st.session_state.output_data = response.text
+                except KeyError:
+                    st.error(
+                        "Configuration Error: GEMINI_API_KEY is missing from Streamlit secrets."
+                    )
+                except errors.APIError as e:
+                    st.error(f"API communication error: {e}")
+                except Exception as e:
+                    st.error(f"System exception: {e}")
     else:
-        target_content = user_input
+        st.warning("Input content is empty. Provide text or a valid URL.")
 
 st.divider()
 
-if target_content:
+if st.session_state.output_data:
     st.subheader("Output Intelligence")
-    with st.spinner("Processing content..."):
-        try:
-            api_key = st.secrets["GEMINI_API_KEY"]
-            client = genai.Client(api_key=api_key)
-
-            if utility_mode == "Summarize Text":
-                prompt = f"Provide a clean executive summary and 3 key takeaways for the following content:\n\n{target_content}"
-            elif utility_mode == "List The Actionable Steps":
-                prompt = f"Extract a clear, prioritized list of actionable steps or deliverables from the following content:\n\n{target_content}"
-            else:
-                prompt = f"Convert the following content into a professional, engaging social media message suitable for LinkedIn or X:\n\n{target_content}"
-
-            response = client.models.generate_content(
-                model="gemini-3.6-flash",
-                contents=prompt,
-            )
-
-            st.markdown(response.text)
-
-        except KeyError:
-            st.error(
-                "Configuration Error: GEMINI_API_KEY is missing from Streamlit secrets."
-            )
-        except errors.APIError as e:
-            st.error(f"API communication error: {e}")
-        except Exception as e:
-            st.error(f"System exception: {e}")
+    st.markdown(st.session_state.output_data)
 else:
-    st.subheader("How this tool works")
+    st.subheader("Features")
     c1, c2, c3 = st.columns(3)
     with c1:
         with st.container(border=True):
-            st.markdown("### Summarize Text")
-            st.markdown("Condenses lengthy content into core takeaways.")
+            st.markdown("### Multi-Format Input")
+            st.markdown(
+                "Seamlessly input raw text blocks or direct web URLs via automated scraping to get the desired outputs."
+            )
     with c2:
         with st.container(border=True):
-            st.markdown("### List The Actionable Steps")
-            st.markdown("Extracts clear, prioritized execution tasks.")
+            st.markdown("### Intelligent Processing")
+            st.markdown(
+                "Uses advanced language models like (`gemini-3.6-flash`) to analyze, scan, and reformat content."
+            )
     with c3:
         with st.container(border=True):
-            st.markdown("### Turn into a Social Media message")
-            st.markdown("Reformats content for professional distribution.")
-
-    st.sidebar.markdown("### System Specs")
-    st.sidebar.markdown("Model: `gemini-3.6-flash`")
+            st.markdown("### Tailored Outputs")
+            st.markdown(
+                "Receive clean summaries, actionable steps, or well-curated social media messages instantly."
+            )
