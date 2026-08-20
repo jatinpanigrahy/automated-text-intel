@@ -1,9 +1,9 @@
 # Automated Text Intelligence
 
-A streamlined web application for rapid text parsing, summarization, and insight extraction utilizing LLLMs (Large Language Models).
+A streamlined web application for rapid text parsing, summarization, and insight extraction utilizing LLMs (Large Language Models).
 ## Preview
 
-> ![App Preview](assets/1.png)
+![App Preview](assets/1.png)
 
 **🔗 [View Live Application](https://jatinp-textintel.streamlit.app/)**
 
