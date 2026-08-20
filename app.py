@@ -164,7 +164,7 @@ if execute_btn:
 st.divider()
 
 if st.session_state.output_data:
-    st.subheader("Output Intelligence")
+    st.subheader("Output")
     st.markdown(st.session_state.output_data)
 else:
     st.subheader("Features")
