@@ -13,7 +13,7 @@ with st.sidebar:
         "Operation Mode", ["Summarize Text", "Extract Action Items", "Analyze Tone"]
     )
     st.divider()
-    st.markdown("Model: `gemini-3.7-flash`")
+    st.markdown("Model: `gemini-1.5-flash`")
 
 user_text = st.text_area(
     "Input Text Source:",
@@ -38,7 +38,7 @@ if st.button("Execute Processing", type="primary"):
                     prompt = f"Perform a clinical tone and sentiment analysis on the following text:\n\n{user_text}"
 
                 response = client.models.generate_content(
-                    model="gemini-3.7-flash",
+                    model="gemini-1.5-flash",
                     contents=prompt,
                 )
 
