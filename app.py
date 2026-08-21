@@ -7,6 +7,7 @@ from google.genai import errors
 st.set_page_config(
     page_title="Text Intelligence",
     layout="wide",
+    page_icon="assets/favicon.svg",
     initial_sidebar_state="collapsed",
 )
 
